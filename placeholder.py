@@ -4,8 +4,12 @@
 from __future__ import with_statement
 
 import os, sys, re, numpy
-from lib.png import Writer
 from optparse import OptionParser, OptionValueError
+
+try:
+    from png import Writer
+except ImportError:
+    from lib.png import Writer
 
 class Placeholder( object ):
     FOREGROUND = 255

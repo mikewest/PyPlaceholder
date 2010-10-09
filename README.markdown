@@ -26,4 +26,4 @@ to come.
       --no-border           Suppress rendering of border around the placeholder
                             image.
 
-[pngpy]: http://pypng.googlecode.com/svn/trunk/code/png.py
+[pypng]: http://pypng.googlecode.com/svn/trunk/code/png.py

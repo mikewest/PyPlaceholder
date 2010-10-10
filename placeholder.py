@@ -11,6 +11,98 @@ try:
 except ImportError:
     from lib.png import Writer
 
+characters = {
+    '0':    [   [ 0, 1, 1, 0, 0 ],
+                [ 1, 0, 0, 1, 0 ],
+                [ 1, 0, 0, 1, 0 ],
+                [ 1, 0, 0, 1, 0 ],
+                [ 0, 1, 1, 0, 0 ] ],
+
+    '1':    [   [ 0, 1, 1, 0, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 1, 1, 1, 0 ] ],
+
+    '2':    [   [ 1, 1, 1, 0, 0 ],
+                [ 0, 0, 0, 1, 0 ],
+                [ 0, 1, 1, 0, 0 ],
+                [ 1, 0, 0, 0, 0 ],
+                [ 1, 1, 1, 1, 0 ] ],
+
+    '3':    [   [ 1, 1, 1, 0, 0 ],
+                [ 0, 0, 0, 1, 0 ],
+                [ 0, 1, 1, 0, 0 ],
+                [ 0, 0, 0, 1, 0 ],
+                [ 1, 1, 1, 0, 0 ] ],
+
+    '4':    [   [ 1, 0, 1, 0, 0 ],
+                [ 1, 0, 1, 0, 0 ],
+                [ 1, 1, 1, 1, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 0, 1, 0, 0 ] ],
+
+    '5':    [   [ 1, 1, 1, 1, 0 ],
+                [ 1, 0, 0, 0, 0 ],
+                [ 1, 1, 1, 0, 0 ],
+                [ 0, 0, 0, 1, 0 ],
+                [ 1, 1, 1, 0, 0 ] ],
+
+    '6':    [   [ 0, 1, 1, 0, 0 ],
+                [ 1, 0, 0, 0, 0 ],
+                [ 1, 1, 1, 0, 0 ],
+                [ 1, 0, 0, 1, 0 ],
+                [ 0, 1, 1, 0, 0 ] ],
+
+    '7':    [   [ 1, 1, 1, 1, 0 ],
+                [ 0, 0, 0, 1, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 1, 0, 0, 0 ],
+                [ 0, 1, 0, 0, 0 ] ],
+
+    '8':    [   [ 0, 1, 1, 0, 0 ],
+                [ 1, 0, 0, 1, 0 ],
+                [ 0, 1, 1, 0, 0 ],
+                [ 1, 0, 0, 1, 0 ],
+                [ 0, 1, 1, 0, 0 ] ],
+
+    '9':    [   [ 0, 1, 1, 0, 0 ],
+                [ 1, 0, 0, 1, 0 ],
+                [ 0, 1, 1, 1, 0 ],
+                [ 0, 0, 0, 1, 0 ],
+                [ 0, 1, 1, 0, 0 ] ],
+
+    '(':    [   [ 0, 0, 0, 1, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 0, 0, 1, 0 ] ],
+
+    ')':    [   [ 0, 1, 0, 0, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 1, 0, 0, 0 ] ],
+
+    'x':    [   [ 0, 0, 0, 0, 0 ],
+                [ 0, 1, 0, 1, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 1, 0, 1, 0 ],
+                [ 0, 0, 0, 0, 0 ] ],
+
+    ':':    [   [ 0, 0, 0, 0, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 0, 0, 0, 0 ],
+                [ 0, 0, 1, 0, 0 ],
+                [ 0, 0, 0, 0, 0 ] ],
+
+    ' ':    [   [ 0, 0, 0, 0, 0 ],
+                [ 0, 0, 0, 0, 0 ],
+                [ 0, 0, 0, 0, 0 ],
+                [ 0, 0, 0, 0, 0 ],
+                [ 0, 0, 0, 0, 0 ] ]
+}
+
 class Placeholder( object ):
     FOREGROUND = 255
     BACKGROUND = 0
@@ -36,6 +128,41 @@ class Placeholder( object ):
 
     def getColor( self, opacity ):
         return int( 255 * opacity )
+
+    def calculateAspectRatio( self ):
+        def gcd(a, b):
+            if b == 0:
+                return a
+            return gcd(b, a % b)
+        def lcm(a, b):
+            return a * b / gcd( a, b )
+
+        return "%d:%d" % ( lcm( self.width, self.height ) / self.height, lcm( self.width, self.height ) / self.width )
+
+    def addMetadata( self, pixels ):
+        shortMetadataString = "%dx%d" % ( self.width, self.height )
+        metadataString      = "%s (%s)" % ( shortMetadataString, self.calculateAspectRatio() )
+        if ( len( metadataString ) * 5 > self.width - 7 ):
+            if ( len( shortMetadataString ) * 8 <= self.width - 7 ):
+                metadataString = shortMetadataString
+            else:
+                metadataString = None
+
+        if metadataString is not None:
+            startX = self.width  - len( metadataString ) * 5 - 7;
+            startY = self.height - 8 - 2;
+            color  = 1
+            for x in range( startX, self.width - 2 ):
+                for y in range( startY, self.height - 2 ):
+                    if x >= startX + 4 and x < self.width - 4 + 1 and y >= startY + 2 and y < startY + 5 + 2:
+                        char  = int( ( x - ( startX + 4 ) ) / 5 )
+                        charX = ( x - ( startX + 4 ) ) % 5
+                        charY = ( y - ( startY + 2 ) ) % 5
+                        if charX == 0 and charY == 0:
+                            color = 0 if color == 1 else 1
+                        pixels[ y, x ] = Placeholder.BACKGROUND if ( characters[ metadataString[ char ] ][ charY ][ charX ] == 1 ) else Placeholder.FOREGROUND
+                    else:
+                        pixels[ y, x ] = Placeholder.FOREGROUND
 
     def write( self ):
         slope       = ( 1.0 * self.height ) / self.width
@@ -89,6 +216,8 @@ class Placeholder( object ):
                     for y in range( 1, self.height - 1 ):
                         pixels[ y,  leftX  ] = Placeholder.FOREGROUND
                         pixels[ y,  rightX ] = Placeholder.FOREGROUND
+
+        self.addMetadata( pixels )
 
         with open( self.out, 'wb' ) as f:
             w = Writer( self.width, self.height, background=self.colors[0], palette=self.colors, bitdepth=8 )

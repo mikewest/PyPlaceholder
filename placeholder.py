@@ -96,6 +96,12 @@ characters = {
                 [ 0, 0, 1, 0, 0 ],
                 [ 0, 0, 0, 0, 0 ] ],
 
+    '~':    [   [ 0, 0, 0, 0, 0 ],
+                [ 0, 0, 0, 0, 0 ],
+                [ 0, 1, 0, 1, 0 ],
+                [ 1, 0, 1, 0, 0 ],
+                [ 0, 0, 0, 0, 0 ] ],
+
     ' ':    [   [ 0, 0, 0, 0, 0 ],
                 [ 0, 0, 0, 0, 0 ],
                 [ 0, 0, 0, 0, 0 ],
@@ -137,7 +143,24 @@ class Placeholder( object ):
         def lcm(a, b):
             return a * b / gcd( a, b )
 
-        return "%d:%d" % ( lcm( self.width, self.height ) / self.height, lcm( self.width, self.height ) / self.width )
+        #
+        #   Fake some common ratios with a margin of error
+        #
+        actualRatio = self.width / self.height
+        if ( abs( 16 / 9 - actualRatio ) < 0.05 ):
+            return "~16:9"
+        elif ( abs( 9 / 16 - actualRatio ) < 0.05 ):
+            return "~9:16"
+        elif ( abs( 4 / 3 - actualRatio ) < 0.05 ):
+            return "~4:3"
+        elif ( abs( 3 / 4 - actualRatio ) < 0.05 ):
+            return "~3:4"
+        elif ( abs( 1 - actualRatio ) < 0.05 ):
+            return "~1:1"
+        else:
+            w = lcm( self.width, self.height ) / self.height
+            h = lcm( self.width, self.height ) / self.width
+            return "%d:%d" % ( w, h )
 
     def addMetadata( self, pixels ):
         shortMetadataString = "%dx%d" % ( self.width, self.height )

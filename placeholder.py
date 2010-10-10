@@ -109,21 +109,29 @@ characters = {
                 [ 0, 0, 0, 0, 0 ] ]
 }
 
+class PlaceholderOptionError( Exception ):
+    pass
+
 class Placeholder( object ):
     FOREGROUND = 255
     BACKGROUND = 0
-    def __init__( self, settings ):
-        self.width  = settings.width
-        self.height = settings.height
-        self.out    = settings.out
-        self.border = settings.border
-        self.colors = self.generateColors( settings.background, settings.foreground )
+    def __init__( self, width=100, height=100, background="DDDDDD", foreground="333333", out="png.png", border=True ):
+        self.width  = width
+        self.height = height
+        self.out    = out
+        self.border = border
+        self.colors = self.generateColors( background, foreground )
 
     def generateColors( self, start, end ):
         colors  = []
         steps   = Placeholder.FOREGROUND * 1.0
-        start   = ( int( start[0:2], 16 ),  int( start[2:4], 16 ),  int( start[4:6], 16 ) )
-        end     = ( int( end[0:2], 16 ),    int( end[2:4], 16 ),    int( end[4:6], 16 ) )
+        
+        try:
+            start   = ( int( start[0:2], 16 ),  int( start[2:4], 16 ),  int( start[4:6], 16 ) )
+            end     = ( int( end[0:2], 16 ),    int( end[2:4], 16 ),    int( end[4:6], 16 ) )
+        except ValueError as ex:
+            raise PlaceholderOptionError( 'Please enter something resembling an actual hex value: "%s"' % str( ex ) )
+
         step    = ( (end[0]-start[0])/steps, (end[1]-start[1])/steps, (end[2]-start[2])/steps )
         for rgb in range( 0, int( steps ) ):
             colors.append( (
@@ -146,17 +154,18 @@ class Placeholder( object ):
         #
         #   Fake some common ratios with a margin of error
         #
-        actualRatio = self.width / self.height
-        if ( abs( 16 / 9 - actualRatio ) < 0.05 ):
-            return "~16:9"
-        elif ( abs( 9 / 16 - actualRatio ) < 0.05 ):
-            return "~9:16"
-        elif ( abs( 4 / 3 - actualRatio ) < 0.05 ):
-            return "~4:3"
-        elif ( abs( 3 / 4 - actualRatio ) < 0.05 ):
-            return "~3:4"
-        elif ( abs( 1 - actualRatio ) < 0.05 ):
+        actualRatio = ( 1.0 * self.width ) / self.height
+
+        if ( abs( 1 - actualRatio ) < 0.02 ):
             return "~1:1"
+        elif ( abs( 16 / 9 - actualRatio ) < 0.02 ):
+            return "~16:9"
+        elif ( abs( 9 / 16 - actualRatio ) < 0.02 ):
+            return "~9:16"
+        elif ( abs( 4 / 3 - actualRatio ) < 0.02 ):
+            return "~4:3"
+        elif ( abs( 3 / 4 - actualRatio ) < 0.02 ):
+            return "~3:4"
         else:
             w = lcm( self.width, self.height ) / self.height
             h = lcm( self.width, self.height ) / self.width
@@ -176,7 +185,7 @@ class Placeholder( object ):
             startY = self.height - 8 - 2;
             color  = 1
             for x in range( startX, self.width - 2 ):
-                for y in range( startY, self.height - 2 ):
+                for y in range( startY, self.height - 2 + 1 ):
                     if x >= startX + 4 and x < self.width - 4 + 1 and y >= startY + 2 and y < startY + 5 + 2:
                         char  = int( ( x - ( startX + 4 ) ) / 5 )
                         charX = ( x - ( startX + 4 ) ) % 5
@@ -317,7 +326,8 @@ def main(argv=None):
     
     (options, args) = parser.parse_args()
 
-    p = Placeholder( options )
+    p = Placeholder(    width=options.width, height=options.height, background=options.background,
+                        foreground=options.foreground, out=options.out, border=options.border )
     p.write()
 
 if __name__ == "__main__":

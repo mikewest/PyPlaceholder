@@ -115,12 +115,13 @@ class PlaceholderOptionError( Exception ):
 class Placeholder( object ):
     FOREGROUND = 255
     BACKGROUND = 0
-    def __init__( self, width=100, height=100, background="DDDDDD", foreground="333333", out="png.png", border=True ):
-        self.width  = width
-        self.height = height
-        self.out    = out
-        self.border = border
-        self.colors = self.generateColors( background, foreground )
+    def __init__( self, width=100, height=100, background="DDDDDD", foreground="333333", out="png.png", border=True, metadata=True ):
+        self.width      = width
+        self.height     = height
+        self.out        = out
+        self.border     = border
+        self.metadata   = metadata
+        self.colors     = self.generateColors( background, foreground )
 
     def generateColors( self, start, end ):
         colors  = []
@@ -249,7 +250,8 @@ class Placeholder( object ):
                         pixels[ y,  leftX  ] = Placeholder.FOREGROUND
                         pixels[ y,  rightX ] = Placeholder.FOREGROUND
 
-        self.addMetadata( pixels )
+        if self.metadata: 
+            self.addMetadata( pixels )
 
         with open( self.out, 'wb' ) as f:
             w = Writer( self.width, self.height, background=self.colors[0], palette=self.colors, bitdepth=8 )
@@ -323,11 +325,19 @@ def main(argv=None):
                         type=None,
                         default=True,
                         help="Suppress rendering of border around the placeholder image.")
+
+    parser.add_option(  "--no-metadata",
+                        action="store_false",
+                        dest="metadata",
+                        type=None,
+                        default=True,
+                        help="Suppress rendering of the placeholder's image size/aspect ratio.")
     
     (options, args) = parser.parse_args()
 
     p = Placeholder(    width=options.width, height=options.height, background=options.background,
-                        foreground=options.foreground, out=options.out, border=options.border )
+                        foreground=options.foreground, out=options.out, border=options.border,
+                        metadata=options.metadata )
     p.write()
 
 if __name__ == "__main__":
